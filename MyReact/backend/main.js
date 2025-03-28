@@ -9,12 +9,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // Change this if your frontend is hosted elsewhere
+        origin: ["http://localhost:5173", "https://your-frontend-url.onrender.com"], // Allow both local and hosted frontend
         methods: ["GET", "POST"]
     }
 });
 
-app.use(cors());
+app.use(cors({ origin: "*" })); // Allows requests from anywhere
 
 // Handle socket connections
 io.on("connection", (socket) => {
@@ -30,5 +30,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, () => {
-    console.log(`Server Started at port: ${port}`);
+    console.log(`Server started at port: ${port}`);
 });
