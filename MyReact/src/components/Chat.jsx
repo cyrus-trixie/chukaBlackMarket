@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 
-// Automatically use the correct backend URL
-const socket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:5000");
-
+// Use Render backend URL
+const socket = io("https://letschat-rur0.onrender.com");
 
 export default function Chat() {
     const [chat, setChat] = useState("");
@@ -33,7 +32,7 @@ export default function Chat() {
                 <h1 className="text-2xl text-white font-bold font-serif">Let's Chat</h1>
             </div>
 
-            {/* Chat Area (Adjusted with padding) */}
+            {/* Chat Area */}
             <div id="chat" className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]">
                 {messages.map((msg, index) => (
                     <section key={index} className="p-2 text-wrap rounded-md bg-gray-200 max-w-xs whitespace-pre-wrap break-words mb-2">

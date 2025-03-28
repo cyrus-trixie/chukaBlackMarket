@@ -4,24 +4,25 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000; // Use Render-assigned port
 const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173", "https://your-frontend-url.onrender.com"], // Allow both local and hosted frontend
+        origin: "*", // Allow all origins
         methods: ["GET", "POST"]
     }
 });
 
-app.use(cors({ origin: "*" })); // Allows requests from anywhere
+app.use(cors());
 
 // Handle socket connections
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
     socket.on("sendMessage", (message) => {
-        io.emit("receiveMessage", message); // Broadcast to all users
+        console.log(`Message received: ${message}`);
+        io.emit("receiveMessage", message);
     });
 
     socket.on("disconnect", () => {
