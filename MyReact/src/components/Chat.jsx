@@ -2,11 +2,8 @@ import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 
 // Automatically use the correct backend URL
-const socket = io(
-    import.meta.env.PROD 
-        ? "https://letschat-rur0.onrender.com"  // Deployed backend
-        : "http://localhost:5000" // Local backend for development
-);
+const socket = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:5000");
+
 
 export default function Chat() {
     const [chat, setChat] = useState("");
