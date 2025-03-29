@@ -6,14 +6,8 @@ const socket = io("https://letschat-rur0.onrender.com");
 
 // List of good border colors
 const colors = [
-    "#4A90E2", // Blue
-    "#D0021B", // Red
-    "#F5A623", // Orange
-    "#8B572A", // Brown
-    "#417505", // Green
-    "#BD10E0", // Purple
-    "#9013FE", // Violet
-    "#50E3C2"  // Teal
+    "#4A90E2", "#D0021B", "#F5A623", "#8B572A",
+    "#417505", "#BD10E0", "#9013FE", "#50E3C2"
 ];
 
 export default function Chat() {
@@ -63,25 +57,24 @@ export default function Chat() {
     }
 
     return (
-        <div className="h-screen flex flex-col">
+        <div className="h-screen flex flex-col bg-gray-100">
             {/* Fixed Header */}
-            <div className="bg-purple-800 flex justify-center items-center p-4 fixed top-0 left-0 w-full">
+            <div className="bg-purple-800 flex justify-center items-center p-4 fixed top-0 left-0 w-full z-10">
                 <h1 className="text-2xl text-white font-bold font-serif">Let's Chat</h1>
             </div>
 
             {/* Chat Area (Scrollable) */}
             <div 
                 ref={chatRef} 
-                id="chat" 
-                className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px] pb-20" // Extra padding at bottom
-                style={{ scrollBehavior: "smooth" }} // Smooth scrolling
+                className="flex-1 mt-16 overflow-y-auto p-4 pb-20"
+                style={{ scrollBehavior: "smooth" }}
             >
                 {messages.map((msg, index) => (
                     <section 
                         key={index} 
-                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2 bg-white"
-                        style={{ borderColor: msg.borderColor, color: "black" }} // Black text on white bg
-                        ref={index === messages.length - 1 ? lastMessageRef : null} // Last message ref
+                        className="p-3 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2 bg-white"
+                        style={{ borderColor: msg.borderColor, color: "black" }}
+                        ref={index === messages.length - 1 ? lastMessageRef : null}
                     >
                         <p>{msg.text}</p>
                     </section>
@@ -90,16 +83,19 @@ export default function Chat() {
 
             {/* Fixed Input at Bottom */}
             <div className="bg-purple-800 p-3 fixed bottom-0 left-0 w-full">
-                <div className="flex space-x-3 max-w-2xl mx-auto">
+                <div className="flex items-center space-x-3 max-w-2xl mx-auto">
                     <input 
                         type="text" 
-                        className="w-full p-2 rounded-lg outline-none"
+                        className="flex-1 p-2 rounded-lg outline-none bg-white text-black"
                         placeholder="Type a message..."
                         value={chat}
                         onChange={(e) => setChat(e.target.value)}
-                        onKeyDown={handleKeyPress} // Handle Enter key
+                        onKeyDown={handleKeyPress}
                     />
-                    <button className="bg-white text-purple-800 p-2 w-32 rounded-lg font-semibold" onClick={sendChat}>
+                    <button 
+                        className="bg-white text-purple-800 p-2 px-4 rounded-lg font-semibold" 
+                        onClick={sendChat}
+                    >
                         Send
                     </button>
                 </div>
