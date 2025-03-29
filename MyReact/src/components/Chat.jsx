@@ -96,7 +96,7 @@ export default function Chat() {
                         onChange={(e) => setChat(e.target.value)}
                         onKeyDown={handleKeyPress} // Handle Enter key
                     />
-                    <button className="bg-white text-purple-800 p-2 w-32 rounded-lg font-semibold" onClick={sendChat}>
+                    <button className="bg-white text-purple-800 p-2 w-32 mt-20 rounded-lg font-semibold" onClick={sendChat}>
                         Send
                     </button>
                 </div>
