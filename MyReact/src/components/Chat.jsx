@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 // Use Render backend URL
 const socket = io("https://letschat-rur0.onrender.com");
 
-// List of good background colors
+// List of good border colors
 const colors = [
     "#4A90E2", // Blue
     "#D0021B", // Red
@@ -18,26 +18,27 @@ const colors = [
 
 export default function Chat() {
     const [chat, setChat] = useState("");
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(() => {
+        return JSON.parse(localStorage.getItem("messages")) || [];
+    });
     const chatRef = useRef(null); // Ref to scroll messages
 
     useEffect(() => {
         socket.on("receiveMessage", (message) => {
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            setMessages((prev) => [...prev, { text: message, color: randomColor }]);
+            const newMessage = { text: message, borderColor: randomColor };
+
+            setMessages((prev) => {
+                const updatedMessages = [...prev, newMessage];
+                localStorage.setItem("messages", JSON.stringify(updatedMessages)); // Save to local storage
+                return updatedMessages;
+            });
         });
 
         return () => {
             socket.off("receiveMessage");
         };
     }, []);
-
-    useEffect(() => {
-        // Auto-scroll to the latest message
-        if (chatRef.current) {
-            chatRef.current.scrollTop = chatRef.current.scrollHeight;
-        }
-    }, [messages]);
 
     function sendChat() {
         if (chat.trim()) {
@@ -59,13 +60,13 @@ export default function Chat() {
                 <h1 className="text-2xl text-white font-bold font-serif">Let's Chat</h1>
             </div>
 
-            {/* Chat Area with Auto-scroll */}
+            {/* Chat Area (Scrollable) */}
             <div ref={chatRef} id="chat" className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]">
                 {messages.map((msg, index) => (
                     <section 
                         key={index} 
-                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2"
-                        style={{ backgroundColor: msg.color, color: "white" }}
+                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2"
+                        style={{ borderColor: msg.borderColor, color: "white" }}
                     >
                         <p>{msg.text}</p>
                     </section>
