@@ -65,8 +65,8 @@ export default function Chat() {
                 {messages.map((msg, index) => (
                     <section 
                         key={index} 
-                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2"
-                        style={{ borderColor: msg.borderColor, color: "white" }}
+                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2 bg-white"
+                        style={{ borderColor: msg.borderColor, color: "black" }} // Black text on white bg
                     >
                         <p>{msg.text}</p>
                     </section>
