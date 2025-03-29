@@ -19,7 +19,7 @@ const colors = [
 export default function Chat() {
     const [chat, setChat] = useState("");
     const [messages, setMessages] = useState(() => {
-        return JSON.parse(localStorage.getItem("messages")) || [];
+        return JSON.parse(sessionStorage.getItem("messages")) || [];
     });
     const chatRef = useRef(null); // Ref to scroll messages
 
@@ -30,7 +30,7 @@ export default function Chat() {
 
             setMessages((prev) => {
                 const updatedMessages = [...prev, newMessage];
-                localStorage.setItem("messages", JSON.stringify(updatedMessages)); // Save to local storage
+                sessionStorage.setItem("messages", JSON.stringify(updatedMessages)); // Save to session storage
                 return updatedMessages;
             });
         });
@@ -39,6 +39,13 @@ export default function Chat() {
             socket.off("receiveMessage");
         };
     }, []);
+
+    useEffect(() => {
+        // Auto-scroll to the latest message
+        if (chatRef.current) {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     function sendChat() {
         if (chat.trim()) {
@@ -61,7 +68,12 @@ export default function Chat() {
             </div>
 
             {/* Chat Area (Scrollable) */}
-            <div ref={chatRef} id="chat" className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]">
+            <div 
+                ref={chatRef} 
+                id="chat" 
+                className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]"
+                style={{ scrollBehavior: "smooth" }} // Smooth scrolling
+            >
                 {messages.map((msg, index) => (
                     <section 
                         key={index} 
