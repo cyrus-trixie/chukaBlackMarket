@@ -1,16 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
 // Use Render backend URL
 const socket = io("https://letschat-rur0.onrender.com");
 
+// List of good background colors
+const colors = [
+    "#4A90E2", // Blue
+    "#D0021B", // Red
+    "#F5A623", // Orange
+    "#8B572A", // Brown
+    "#417505", // Green
+    "#BD10E0", // Purple
+    "#9013FE", // Violet
+    "#50E3C2"  // Teal
+];
+
 export default function Chat() {
     const [chat, setChat] = useState("");
     const [messages, setMessages] = useState([]);
+    const chatRef = useRef(null); // Ref to scroll messages
 
     useEffect(() => {
         socket.on("receiveMessage", (message) => {
-            setMessages((prev) => [...prev, message]);
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            setMessages((prev) => [...prev, { text: message, color: randomColor }]);
         });
 
         return () => {
@@ -18,10 +32,23 @@ export default function Chat() {
         };
     }, []);
 
+    useEffect(() => {
+        // Auto-scroll to the latest message
+        if (chatRef.current) {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        }
+    }, [messages]);
+
     function sendChat() {
         if (chat.trim()) {
             socket.emit("sendMessage", chat);
             setChat("");
+        }
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === "Enter") {
+            sendChat();
         }
     }
 
@@ -32,11 +59,15 @@ export default function Chat() {
                 <h1 className="text-2xl text-white font-bold font-serif">Let's Chat</h1>
             </div>
 
-            {/* Chat Area */}
-            <div id="chat" className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]">
+            {/* Chat Area with Auto-scroll */}
+            <div ref={chatRef} id="chat" className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]">
                 {messages.map((msg, index) => (
-                    <section key={index} className="p-2 text-wrap rounded-md bg-gray-200 max-w-xs whitespace-pre-wrap break-words mb-2">
-                        <p>{msg}</p>
+                    <section 
+                        key={index} 
+                        className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2"
+                        style={{ backgroundColor: msg.color, color: "white" }}
+                    >
+                        <p>{msg.text}</p>
                     </section>
                 ))}
             </div>
@@ -50,6 +81,7 @@ export default function Chat() {
                         placeholder="Type a message..."
                         value={chat}
                         onChange={(e) => setChat(e.target.value)}
+                        onKeyDown={handleKeyPress} // Handle Enter key
                     />
                     <button className="bg-white text-purple-800 p-2 w-32 rounded-lg font-semibold" onClick={sendChat}>
                         Send
