@@ -21,7 +21,9 @@ export default function Chat() {
     const [messages, setMessages] = useState(() => {
         return JSON.parse(sessionStorage.getItem("messages")) || [];
     });
-    const chatRef = useRef(null); // Ref to scroll messages
+
+    const chatRef = useRef(null); // Ref for chat container
+    const lastMessageRef = useRef(null); // Ref for last message
 
     useEffect(() => {
         socket.on("receiveMessage", (message) => {
@@ -42,8 +44,8 @@ export default function Chat() {
 
     useEffect(() => {
         // Auto-scroll to the latest message
-        if (chatRef.current) {
-            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        if (lastMessageRef.current) {
+            lastMessageRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
     }, [messages]);
 
@@ -71,7 +73,7 @@ export default function Chat() {
             <div 
                 ref={chatRef} 
                 id="chat" 
-                className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px]"
+                className="flex-1 mt-4 overflow-y-auto p-4 pt-[60px] pb-20" // Extra padding at bottom
                 style={{ scrollBehavior: "smooth" }} // Smooth scrolling
             >
                 {messages.map((msg, index) => (
@@ -79,6 +81,7 @@ export default function Chat() {
                         key={index} 
                         className="p-2 text-wrap rounded-md max-w-xs whitespace-pre-wrap break-words mb-2 border-2 bg-white"
                         style={{ borderColor: msg.borderColor, color: "black" }} // Black text on white bg
+                        ref={index === messages.length - 1 ? lastMessageRef : null} // Last message ref
                     >
                         <p>{msg.text}</p>
                     </section>
@@ -96,7 +99,7 @@ export default function Chat() {
                         onChange={(e) => setChat(e.target.value)}
                         onKeyDown={handleKeyPress} // Handle Enter key
                     />
-                    <button className="bg-white text-purple-800 p-2 w-32 mt-20 rounded-lg font-semibold" onClick={sendChat}>
+                    <button className="bg-white text-purple-800 p-2 w-32 rounded-lg font-semibold" onClick={sendChat}>
                         Send
                     </button>
                 </div>
