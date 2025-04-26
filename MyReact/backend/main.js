@@ -60,10 +60,7 @@ app.get('/api/test', async (req, res) => {
 // Get all products
 app.get('/api/products', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT * FROM products
-      ORDER BY created_at DESC
-    `);
+    const [rows] = await pool.query('SELECT * FROM products ORDER BY id DESC');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -74,9 +71,7 @@ app.get('/api/products', async (req, res) => {
 // Get product by ID
 app.get('/api/products/:id', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
-      SELECT * FROM products WHERE id = ?
-    `, [req.params.id]);
+    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Product not found' });
@@ -99,10 +94,10 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
   }
 
   try {
-    const [result] = await pool.query(`
-      INSERT INTO products (title, description, price, category, location, image_url, phone_number)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [title, description, price, category, location, image_url, phone_number]);
+    const [result] = await pool.query(
+      'INSERT INTO products (title, description, price, category, location, image_url, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, description, price, category, location, image_url, phone_number]
+    );
 
     res.status(201).json({
       message: 'Product created successfully',
@@ -128,11 +123,10 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   const image_url = req.file ? `/uploads/${req.file.filename}` : null;
 
   try {
-    const [result] = await pool.query(`
-      UPDATE products
-      SET title = ?, description = ?, price = ?, category = ?, location = ?, image_url = ?, phone_number = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [title, description, price, category, location, image_url, phone_number, req.params.id]);
+    const [result] = await pool.query(
+      'UPDATE products SET title = ?, description = ?, price = ?, category = ?, location = ?, image_url = ?, phone_number = ? WHERE id = ?',
+      [title, description, price, category, location, image_url, phone_number, req.params.id]
+    );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Product not found' });
