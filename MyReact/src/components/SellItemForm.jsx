@@ -74,12 +74,10 @@ const SellItemForm = () => {
         phone_number: '',
       });
 
-
-            // Wait 2 seconds then redirect
-            setTimeout(() => {
-              navigate('/'); // Redirect to homepage
-            }, 2000);
-
+      // Wait 2 seconds then redirect
+      setTimeout(() => {
+        navigate('/'); // Redirect to homepage
+      }, 2000);
 
     } catch (error) {
       setError(error.message);
