@@ -39,10 +39,18 @@ const HomePage = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Function to contact seller via WhatsApp
   const contactSeller = (phoneNumber, productTitle) => {
+    let formattedPhoneNumber = phoneNumber;
+  
+    // Check if the phone number starts with '07' and has at least 10 digits
+    if (phoneNumber.startsWith('07') && phoneNumber.length === 10) {
+      // Remove the leading '0' and add the country code
+      formattedPhoneNumber = '254' + phoneNumber.slice(1);
+    }
+  
     const message = encodeURIComponent(`Hi, I'm interested in your product: ${productTitle}`);
-    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+    const whatsappUrl = `https://wa.me/${formattedPhoneNumber}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
