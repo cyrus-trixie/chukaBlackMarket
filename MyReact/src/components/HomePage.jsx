@@ -120,17 +120,20 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map(product => (
               <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition">
-                {/* Handle different image URL formats */}
-                {product.image_url && product.image_url.startsWith('data:image') ? (
+                {/* Display image correctly */}
+                {product.image_url ? (
                   <img
-                    src={product.image_url}
+                    src={product.image_url.startsWith('https://res.cloudinary.com/')
+                      ? product.image_url
+                      : `http://localhost:5000${product.image_url}`
+                    }
                     alt={product.title}
                     className="w-full h-48 object-cover"
                   />
                 ) : (
                   <img
-                    src={product.image_url ? `http://localhost:5000${product.image_url}` : "/api/placeholder/400/300"}
-                    alt={product.title}
+                    src="/api/placeholder/400/300"  // Or your placeholder image path
+                    alt="Placeholder"
                     className="w-full h-48 object-cover"
                   />
                 )}
@@ -180,7 +183,6 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-
       </footer>
     </div>
   );

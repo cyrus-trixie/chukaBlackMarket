@@ -1,49 +1,50 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 const SellItemForm = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     price: '',
     category: 'electronics',
     location: '',
-    image: null, // Change this to store the image file
-    phone_number: '', 
+    image: null, // Store the image file object
+    phone_number: '',
+    cloudinary_url: '', // To store the Cloudinary URL after successful upload (optional)
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const categories = ['electronics', 'furniture', 'clothing', 'books', 'other'];
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'image') {
       setFormData({
         ...formData,
-        image: e.target.files[0], // Save the file itself
+        image: e.target.files[0],
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
       const user_id = 1; // Example user ID, replace with actual user ID from auth
       const formDataToSend = new FormData();
-      
+
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('price', parseFloat(formData.price));
@@ -52,18 +53,25 @@ const SellItemForm = () => {
       formDataToSend.append('phone_number', formData.phone_number);
       formDataToSend.append('image', formData.image); // Append the image file
 
-      const response = await fetch('http://chukablackmarket-1.onrender.com/api/products', {
+      // Use HTTPS for the API endpoint in production
+      const apiUrl = process.env.NODE_ENV === 'production'
+        ? 'https://chukablackmarket-1.onrender.com/api/products'
+        : 'http://chukablackmarket-1.onrender.com/api/products'; // Adjust if your local backend runs on a different port
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formDataToSend, // Send the formData as the body
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create listing');
       }
-      
+
       setSuccess('Your item has been listed successfully!');
+      // If your backend returns the Cloudinary URL in the response, you can update the state:
+      // setFormData({ ...formData, cloudinary_url: data.product.image_url });
       setFormData({
         title: '',
         description: '',
@@ -72,6 +80,7 @@ const SellItemForm = () => {
         location: '',
         image: null,
         phone_number: '',
+        cloudinary_url: '', // Reset Cloudinary URL as well
       });
 
       // Wait 2 seconds then redirect
@@ -85,25 +94,25 @@ const SellItemForm = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Sell Your Item</h2>
-          
+
           {success && (
             <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
               {success}
             </div>
           )}
-          
+
           {error && (
             <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
@@ -120,7 +129,7 @@ const SellItemForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
                 Description *
@@ -136,7 +145,7 @@ const SellItemForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="price">
                 Price (Ksh) *
@@ -154,7 +163,7 @@ const SellItemForm = () => {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
                 Category *
@@ -174,7 +183,7 @@ const SellItemForm = () => {
                 ))}
               </select>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="location">
                 Location
@@ -219,7 +228,28 @@ const SellItemForm = () => {
                 required
               />
             </div>
-            
+
+            {/* Optional: Display a preview of the uploaded image (using a local URL) */}
+            {formData.image && (
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Image Preview:</label>
+                <img
+                  src={URL.createObjectURL(formData.image)}
+                  alt="Uploaded Preview"
+                  className="w-32 h-32 object-cover rounded-md"
+                />
+              </div>
+            )}
+
+            {/* Optional: Display the Cloudinary URL after successful upload (if your backend returns it) */}
+            {formData.cloudinary_url && success && (
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">Cloudinary URL:</label>
+                <p className="text-sm text-gray-800 break-words">{formData.cloudinary_url}</p>
+                {/* You could also display the image using this URL here if needed */}
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <button
                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
