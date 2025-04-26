@@ -52,7 +52,7 @@ const SellItemForm = () => {
       formDataToSend.append('phone_number', formData.phone_number);
       formDataToSend.append('image', formData.image); // Append the image file
 
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch('http://chukablackmarket-1.onrender.com/api/products', {
         method: 'POST',
         body: formDataToSend, // Send the formData as the body
       });
