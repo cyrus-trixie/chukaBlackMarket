@@ -4,6 +4,8 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 
 // Load environment variables
@@ -17,20 +19,26 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Set up multer storage configuration for uploading files
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Save files in the 'uploads' directory
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // Ensure unique filenames
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Initialize multer with storage settings
+// Set up multer storage configuration for Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'chuka_black_market_images',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
+  },
+});
+
+// Initialize multer with Cloudinary storage settings
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 } // Limit file size to 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
 });
 
 // Database connection pool
@@ -41,7 +49,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'chuka_black_market',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // Test database connection
@@ -87,7 +95,7 @@ app.get('/api/products/:id', async (req, res) => {
 // Create a new product with image upload
 app.post('/api/products', upload.single('image'), async (req, res) => {
   const { title, description, price, category, location, phone_number } = req.body;
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  const image_url = req.file ? req.file.path : null;
 
   if (!title || !description || !price || !category) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -108,8 +116,8 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
         category,
         location,
         image_url,
-        phone_number
-      }
+        phone_number,
+      },
     });
   } catch (error) {
     console.error('Error creating product:', error);
@@ -120,7 +128,7 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
 // Update a product
 app.put('/api/products/:id', upload.single('image'), async (req, res) => {
   const { title, description, price, category, location, phone_number } = req.body;
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  const image_url = req.file ? req.file.path : null;
 
   try {
     const [result] = await pool.query(
@@ -154,9 +162,6 @@ app.delete('/api/products/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
-
-// Serve static files (like images)
-app.use('/uploads', express.static('uploads'));
 
 // Start the server
 app.listen(PORT, () => {
