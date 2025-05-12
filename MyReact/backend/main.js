@@ -6,8 +6,9 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import fs from 'fs'; // Import the 'fs' module if you need to read SSL certificate
-
+import mysql from 'mysql2/promise';
+import fs from 'fs';
+import path from 'path';
 // Load environment variables
 dotenv.config();
 
@@ -41,21 +42,15 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
 });
 
-// Database connection pool
 const pool = mysql.createPool({
-    host: process.env.DB_HOST, // Ensure this includes the correct hostname from Aiven
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    connectTimeout: 10000,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306, // Add port if Aiven uses a non-default one
-    ssl: process.env.DB_SSL_ENABLED === 'true' ? { // Enable SSL if Aiven requires/recommends it
-        // Uncomment and configure the 'ca' property if Aiven requires a CA certificate
-        // ca: process.env.DB_SSL_CA_PATH ? fs.readFileSync(process.env.DB_SSL_CA_PATH) : undefined,
-    } : undefined,
+  host: process.env.DB_HOST,       // e.g., mysql-xxxx.aivencloud.com
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: 25060,                      // Aiven default MySQL port
+  ssl: {
+    ca: fs.readFileSync(path.join('certs', 'ca.pem'))
+  }
 });
 
 // Test database connection
