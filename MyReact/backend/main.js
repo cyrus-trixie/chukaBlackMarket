@@ -161,6 +161,7 @@ app.delete('/api/products/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete product' });
     }
 });
+//mfdfkd
 
 // Start the server
 app.listen(PORT, () => {
