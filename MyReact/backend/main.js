@@ -4,6 +4,8 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
@@ -25,34 +27,38 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Set up multer storage configuration for Cloudinary
+// Multer + Cloudinary storage config
 const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
+    cloudinary,
     params: {
         folder: 'chuka_black_market_images',
         allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
     },
 });
 
-// Initialize multer with Cloudinary storage settings
 const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-// Database connection pool
+// Database connection pool with SSL for Aiven
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD, // Access password from environment variable
-    database: process.env.DB_NAME || 'chuka_black_market',
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 10000
+    connectTimeout: 10000,
+    ssl: {
+        rejectUnauthorized: true,
+        ca: fs.readFileSync(path.resolve('certs/ca.pem')),
+    },
 });
 
-// Test database connection
+// Test DB connection
 app.get('/api/test', async (req, res) => {
     try {
         const connection = await pool.getConnection();
@@ -64,7 +70,6 @@ app.get('/api/test', async (req, res) => {
     }
 });
 
-// API Routes for Products
 // Get all products
 app.get('/api/products', async (req, res) => {
     try {
@@ -80,11 +85,7 @@ app.get('/api/products', async (req, res) => {
 app.get('/api/products/:id', async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
+        if (rows.length === 0) return res.status(404).json({ error: 'Product not found' });
         res.json(rows[0]);
     } catch (error) {
         console.error('Error fetching product:', error);
@@ -92,7 +93,7 @@ app.get('/api/products/:id', async (req, res) => {
     }
 });
 
-// Create a new product with image upload
+// Create a new product
 app.post('/api/products', upload.single('image'), async (req, res) => {
     const { title, description, price, category, location, phone_number } = req.body;
     const image_url = req.file ? req.file.path : null;
@@ -102,22 +103,14 @@ app.post('/api/products', upload.single('image'), async (req, res) => {
     }
 
     try {
-        const [result] = await pool.query(
+        await pool.query(
             'INSERT INTO products (title, description, price, category, location, image_url, phone_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [title, description, price, category, location, image_url, phone_number]
         );
 
         res.status(201).json({
             message: 'Product created successfully',
-            product: {
-                title,
-                description,
-                price,
-                category,
-                location,
-                image_url,
-                phone_number,
-            },
+            product: { title, description, price, category, location, image_url, phone_number },
         });
     } catch (error) {
         console.error('Error creating product:', error);
@@ -136,9 +129,7 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
             [title, description, price, category, location, image_url, phone_number, req.params.id]
         );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Product not found' });
 
         res.json({ message: 'Product updated successfully' });
     } catch (error) {
@@ -151,20 +142,15 @@ app.put('/api/products/:id', upload.single('image'), async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
     try {
         const [result] = await pool.query('DELETE FROM products WHERE id = ?', [req.params.id]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Product not found' });
-        }
-
+        if (result.affectedRows === 0) return res.status(404).json({ error: 'Product not found' });
         res.json({ message: 'Product deleted successfully' });
     } catch (error) {
         console.error('Error deleting product:', error);
         res.status(500).json({ error: 'Failed to delete product' });
     }
 });
-//mfdfkd
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
